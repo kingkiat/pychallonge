@@ -1,5 +1,6 @@
 import decimal
 import iso8601
+import json
 try:
     # For Python 3.0 and later
     from urllib.parse import urlencode
@@ -38,16 +39,23 @@ def get_credentials():
     return _credentials["user"], _credentials["api_key"]
 
 
-def fetch(method, uri, params_prefix=None, **params):
+def fetch(method, uri, json=False, params_prefix=None, **params):
     """Fetch the given uri and return the contents of the response."""
-    params = urlencode(_prepare_params(params, params_prefix))
-    binary_params = params.encode('ASCII')
-
     # build the HTTP request
-    url = "https://%s/%s.xml" % (CHALLONGE_API_URL, uri)
-    req = Request(url, binary_params)
-    req.get_method = lambda: method
+    if not json:
+        params = urlencode(_prepare_params(params, params_prefix))
+        binary_params = params.encode('ASCII')
+        url = "https://%s/%s.xml" % (CHALLONGE_API_URL, uri)
+        req = Request(url, binary_params)
+        req.get_method = lambda: method
+    else:
+        url = "https://%s/%s.json" % (CHALLONGE_API_URL, uri)
+        print url
+        payload = params.get('data', None)
+        req = Request(url, data=payload, headers={'Content-Type': 'application/json'})
+        req.get_method = lambda: method
 
+    
     # use basic authentication
     user, api_key = get_credentials()
     auth_handler = HTTPBasicAuthHandler()
@@ -64,6 +72,14 @@ def fetch(method, uri, params_prefix=None, **params):
     except HTTPError as e:
         if e.code != 422:
             raise
+
+        if json:
+            msg = e.readline()
+            if 'errors' in msg:
+                raise ChallongeException(msg)
+            else:
+                raise
+
         # wrap up application-level errors
         doc = ElementTree.parse(e).getroot()
         if doc.tag != "errors":

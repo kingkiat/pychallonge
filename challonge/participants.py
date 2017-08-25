@@ -57,3 +57,14 @@ def randomize(tournament):
 
     """
     api.fetch("POST", "tournaments/%s/participants/randomize" % tournament)
+
+def bulk_add(tournament, **params):
+    # example:  api.fetch(method='POST', uri=uri,json=True, data='{"participants": [{"name": "test1"}, {"name": "test2"}]}')
+    api.fetch("POST", "tournaments/%s/participants/bulk_add" % tournament, json=True, **params)
+
+
+
+
+
+
+
