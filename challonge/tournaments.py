@@ -36,13 +36,13 @@ def destroy(tournament):
     api.fetch("DELETE", "tournaments/%s" % tournament)
 
 
-def start(tournament):
+def start(tournament, **param):
     """Start a tournament, opening up matches for score reporting.
 
     The tournament must have at least 2 participants.
 
     """
-    api.fetch("POST", "tournaments/start/%s" % tournament)
+    api.fetch("POST", "tournaments/%s/start" % tournament, **param)
 
 
 def reset(tournament):
@@ -53,3 +53,9 @@ def reset(tournament):
 
     """
     api.fetch("POST", "tournaments/reset/%s" % tournament)
+
+def finalize(tournament, **params):
+    """Finalize a tournament that has had all match scores submitted, rendering its results permanent.
+
+    """
+    api.fetch("POST", "tournaments/%s/finalize" % tournament, **params)
